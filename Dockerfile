@@ -14,6 +14,7 @@ COPY patches/ /defaults/patches/
 
 # install runtime packages
 RUN \
+NB_CORES=${BUILD_CORES-`getconf _NPROCESSORS_CONF`} && \
  apk add --no-cache \
 	ca-certificates \
 	curl \
@@ -29,7 +30,6 @@ RUN \
 	php7-json  \
 	php7-mbstring \
 	php7-pear \
-	rtorrent \
 	screen \
 	tar \
 	unrar \
@@ -41,15 +41,20 @@ RUN \
  apk add --no-cache --virtual=build-dependencies \
 	autoconf \
 	automake \
+	binutils \
+	build-base \
 	cppunit-dev \
 	curl-dev \
 	file \
 	g++ \
 	gcc \
+	git \
 	libressl-dev \
 	libtool \
+	linux-headers \
 	make \
-	ncurses-dev && \
+	ncurses-dev \
+	subversion && \
 
 # install webui
  mkdir -p \
@@ -95,6 +100,20 @@ RUN \
 	./CLI_Compile.sh && \
  cd /tmp/mediainfo/MediaInfo/Project/GNU/CLI && \
 	make install && \
+
+# compile libtorrent and rtorrent
+ cd /tmp/ && \
+ svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c && \
+ git clone -b feature-bind https://github.com/rakshasa/libtorrent.git && \
+ git clone -b feature-bind https://github.com/rakshasa/rtorrent.git && \
+ cd /tmp/xmlrpc-c && ./configure && make -j ${NB_CORES} && make install && \
+ cd /tmp/libtorrent && ./autogen.sh && ./configure && \
+ make -j ${NB_CORES} && make install && \
+ cd /tmp/rtorrent && ./autogen.sh && ./configure --with-xmlrpc-c && \
+ make -j ${NB_CORES} && make install && \
+ strip -s /usr/local/bin/rtorrent && \
+ apk del ${BUILD_DEPS} && \
+ deluser svn && delgroup svnusers && \
 
 # cleanup
  apk del --purge \

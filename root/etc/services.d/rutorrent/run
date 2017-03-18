@@ -1,8 +1,8 @@
 #!/usr/bin/with-contenv bash
 
 	screen -D -m -S \
-	rtorrent s6-setuidgid abc /usr/bin/rtorrent \
-	-n -o import=/config/rtorrent/rtorrent.rc
+	rtorrent s6-setuidgid abc /usr/local/bin/rtorrent \
+	-o import=/config/rtorrent/rtorrent.rc
 
 until [ -e "/config/rtorrent/rtorrent_sess/rtorrent.lock" ];
 do
